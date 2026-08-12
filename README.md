@@ -48,8 +48,9 @@ ML Project/
 │       ├── dataset.py         ← SegmentationDataset (used by both tasks)
 │       ├── transforms.py      ← Albumentations train/val pipelines
 │       ├── unet.py            ← U-Net architecture
+│       ├── deeplabv3.py       ← DeepLabv3 (ResNet50 / MobileNetV3) architecture
 │       ├── losses.py          ← BCEDiceLoss, FocalLoss
-│       ├── metrics.py         ← IoU, Dice, Pixel Accuracy
+│       ├── metrics.py         ← IoU, Dice, Pixel Accuracy, Precision, Recall
 │       └── trainer.py         ← Trainer with early stopping + LR scheduling
 ├── notebooks/
 │   ├── 01_EDA_crack.ipynb
@@ -57,10 +58,12 @@ ML Project/
 │   ├── 03_train_crack_unet.ipynb
 │   ├── 04_train_lane_unet.ipynb
 │   ├── 05_evaluate_crack.ipynb
-│   └── 06_evaluate_lane.ipynb
+│   ├── 06_evaluate_lane.ipynb
+│   └── 07_compare_crack_deeplabv3.ipynb
 └── experiments/
     ├── crack_unet_run1/       ← best_model.pth, train_log.csv, curves.png
-    └── lane_unet_run1/        ← same structure
+    ├── lane_unet_run1/        ← same structure
+    └── crack_deeplabv3_run1/  ← DeepLabv3 experiment outputs
 ```
 
 ---
@@ -98,12 +101,13 @@ python src/lane/preprocess.py    # JSON→masks + split CSVs for lane
 Open in Jupyter or Google Colab:
 
 ```
-01_EDA_crack.ipynb        → EDA and augmentation preview
-02_EDA_lane.ipynb         → TuSimple EDA
-03_train_crack_unet.ipynb → Train U-Net on crack detection
-04_train_lane_unet.ipynb  → Train U-Net on lane segmentation
-05_evaluate_crack.ipynb   → Test set evaluation + failure analysis
-06_evaluate_lane.ipynb    → Test set evaluation + failure analysis
+01_EDA_crack.ipynb               → EDA and augmentation preview
+02_EDA_lane.ipynb                → TuSimple EDA
+03_train_crack_unet.ipynb        → Train U-Net on crack detection
+04_train_lane_unet.ipynb         → Train U-Net on lane segmentation
+05_evaluate_crack.ipynb          → Test set evaluation + failure analysis
+06_evaluate_lane.ipynb           → Test set evaluation + failure analysis
+07_compare_crack_deeplabv3.ipynb → Head-to-head comparison: U-Net vs DeepLabv3
 ```
 
 ### 5. Google Colab
