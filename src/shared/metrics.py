@@ -88,19 +88,51 @@ def pixel_accuracy(pred:      torch.Tensor,
     return (correct / total).item()
 
 
+def precision_score(pred:      torch.Tensor,
+                    target:    torch.Tensor,
+                    threshold: float = 0.5) -> float:
+    """
+    Precision: fraction of predicted positive pixels that are true positive.
+    Precision = TP / (TP + FP)
+    """
+    with torch.no_grad():
+        pred_bin = (pred > threshold).float()
+        tp       = (pred_bin * target).sum(dim=(1, 2, 3))
+        fp       = (pred_bin * (1.0 - target)).sum(dim=(1, 2, 3))
+        prec     = (tp + SMOOTH) / (tp + fp + SMOOTH)
+    return prec.mean().item()
+
+
+def recall_score(pred:      torch.Tensor,
+                 target:    torch.Tensor,
+                 threshold: float = 0.5) -> float:
+    """
+    Recall (Sensitivity): fraction of actual positive pixels correctly identified.
+    Recall = TP / (TP + FN)
+    """
+    with torch.no_grad():
+        pred_bin = (pred > threshold).float()
+        tp       = (pred_bin * target).sum(dim=(1, 2, 3))
+        fn       = ((1.0 - pred_bin) * target).sum(dim=(1, 2, 3))
+        rec      = (tp + SMOOTH) / (tp + fn + SMOOTH)
+    return rec.mean().item()
+
+
 def compute_all_metrics(pred:      torch.Tensor,
                         target:    torch.Tensor,
                         threshold: float = 0.5) -> dict[str, float]:
     """
-    Compute IoU, Dice, and Pixel Accuracy in one call.
+    Compute IoU, Dice, Pixel Accuracy, Precision, and Recall in one call.
 
     Returns:
-        dict with keys: 'iou', 'dice', 'pixel_acc'
+        dict with keys: 'iou', 'dice', 'pixel_acc', 'precision', 'recall'
     """
     return {
         "iou"       : iou_score(pred, target, threshold),
         "dice"      : dice_score(pred, target, threshold),
         "pixel_acc" : pixel_accuracy(pred, target, threshold),
+        "precision" : precision_score(pred, target, threshold),
+        "recall"    : recall_score(pred, target, threshold),
     }
 
 
