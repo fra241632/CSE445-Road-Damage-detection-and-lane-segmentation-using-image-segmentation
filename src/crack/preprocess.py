@@ -13,6 +13,8 @@ Usage (after download_data.py --extract has been run):
     python src/crack/preprocess.py
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import csv

@@ -13,6 +13,8 @@ Usage:
     model = DeepLabV3Segmentation(in_channels=3, out_channels=1, backbone="resnet50", pretrained=True)
 """
 
+from __future__ import annotations
+
 import torch
 import torch.nn as nn
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
