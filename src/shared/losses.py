@@ -3,7 +3,7 @@ src/shared/losses.py
 ---------------------
 Loss functions for binary segmentation with extreme class imbalance.
 
-Crack pixels account for only ~2–5% of image area; lane pixels ~3–8%.
+Crack pixels account for only ~2–5% of image area.
 Plain BCE treats these equally weighted with background — the model tends
 to predict all-background and achieves ~95% accuracy while learning nothing.
 
@@ -59,7 +59,7 @@ def focal_loss(pred:   torch.Tensor,
 
     Args:
         alpha : weight for positive class (foreground). Set higher (>0.5) when
-                foreground is rare (crack/lane pixels).
+                foreground is rare (crack pixels).
         gamma : focusing parameter. gamma=0 reduces to BCE; gamma=2 is typical.
     """
     bce = F.binary_cross_entropy(pred, target, reduction="none")

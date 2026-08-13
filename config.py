@@ -33,12 +33,6 @@ CRACK_IMG_DIR   = CRACK_DIR / "images"
 CRACK_MASK_DIR  = CRACK_DIR / "masks"
 CRACK_SPLIT_DIR = CRACK_DIR / "splits"   # train.csv / val.csv / test.csv
 
-LANE_DIR        = DATA_DIR / "lane"
-LANE_IMG_DIR    = LANE_DIR / "images"
-LANE_MASK_DIR   = LANE_DIR / "masks"
-LANE_SPLIT_DIR  = LANE_DIR / "splits"
-LANE_JSON_DIR   = LANE_DIR / "annotations"   # TuSimple *.json files
-
 # ---------------------------------------------------------------------------
 # Experiment output paths
 # ---------------------------------------------------------------------------
@@ -75,25 +69,6 @@ CRACK_UNET = dict(
     bce_weight      = 0.5,
     dice_weight     = 0.5,
     device          = "cuda",  # falls back to cpu in trainer.py if unavailable
-)
-
-# ---------------------------------------------------------------------------
-# Training – U-Net lane segmentation
-# ---------------------------------------------------------------------------
-LANE_UNET = dict(
-    run_name        = "lane_unet_run1",
-    in_channels     = 3,
-    out_channels    = 1,
-    base_features   = 32,
-    epochs          = 50,
-    batch_size      = 8,
-    lr              = 1e-4,
-    lr_patience     = 5,
-    lr_factor       = 0.5,
-    early_stop_patience = 10,
-    bce_weight      = 0.5,
-    dice_weight     = 0.5,
-    device          = "cuda",
 )
 
 # ---------------------------------------------------------------------------

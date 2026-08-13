@@ -27,16 +27,12 @@ def get_train_transforms(img_size: tuple[int, int] = (config.IMG_HEIGHT, config.
 
     Augmentations applied (all with p < 1 so the model sees originals too):
       - Resize to target size
-      - HorizontalFlip               (p=0.5)  – works for both cracks and lane lines
+      - HorizontalFlip               (p=0.5)  – flip horizontally
       - RandomRotate90               (p=0.5)  – useful for crack detection
       - RandomBrightnessContrast     (p=0.3)  – simulates lighting variation
       - GaussNoise                   (p=0.2)  – sensor noise robustness
       - Normalize (ImageNet mean/std)
       - ToTensorV2 → float32 Tensor
-
-    Note: RandomRotate90 is intentionally left in even for lane segmentation;
-          it increases augmentation variety and the model learns to handle it.
-          If you want lane-only training without rotation, pass rotate90_p=0.
     """
     h, w = img_size
     aug = config.AUG

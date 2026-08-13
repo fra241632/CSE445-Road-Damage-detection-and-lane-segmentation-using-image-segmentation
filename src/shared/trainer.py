@@ -51,7 +51,7 @@ class Trainer:
     Args:
         model        : nn.Module (e.g. UNet)
         loss_fn      : callable(pred, target) → scalar loss tensor
-        cfg          : dict from config.CRACK_UNET or config.LANE_UNET
+        cfg          : dict from config.CRACK_UNET
         train_loader : DataLoader for training split
         val_loader   : DataLoader for validation split
         exp_dir      : optional override for experiment output directory

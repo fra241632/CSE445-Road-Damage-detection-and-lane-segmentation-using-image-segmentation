@@ -1,7 +1,7 @@
 """
 src/shared/dataset.py
 ----------------------
-PyTorch Dataset for binary segmentation tasks (crack detection & lane segmentation).
+PyTorch Dataset for binary crack segmentation.
 
 Reads image-mask pairs from a CSV manifest produced by preprocess.py:
     image_path, mask_path

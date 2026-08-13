@@ -1,22 +1,19 @@
-# Road Damage Detection & Lane Segmentation Using Deep Learning
+# Road Surface Crack Detection Using Deep Learning
 
-**CSE445 Machine Learning Project**
-Group 02 | Section 07
+**CSE445 Machine Learning Project**  
+Group 02 | Section 07  
 
 ---
 
 ## Overview
 
-Two-task supervised semantic segmentation project:
+Supervised semantic segmentation project focused on pavement crack detection:
 
-| Task | Dataset | Model | Output |
-|---|---|---|---|
-| Crack Detection | CRACK500 + DeepCrack | U-Net | Binary crack mask |
-| Lane Segmentation | TuSimple | U-Net | Binary lane mask |
+| Task | Dataset | Primary Model | Comparison Model | Output |
+|---|---|---|---|---|
+| Crack Detection | CRACK500 + DeepCrack | U-Net | DeepLabv3 (ResNet50) | Binary crack mask |
 
-Both tasks are framed as pixel-wise binary segmentation, trained with
-a combined BCE + Dice loss to handle extreme class imbalance
-(crack/lane pixels are only 2–8% of total image area).
+Framed as pixel-wise binary segmentation, trained with a combined BCE + Dice loss to handle extreme class imbalance (crack pixels are only 2–5% of total image area).
 
 ---
 
@@ -28,41 +25,29 @@ ML Project/
 ├── requirements.txt
 ├── data/
 │   ├── README.md              ← Dataset download instructions
-│   ├── crack/
-│   │   ├── images/            ← CRACK500 + DeepCrack images (after download)
-│   │   ├── masks/             ← Binary crack masks
-│   │   └── splits/            ← train.csv / val.csv / test.csv (70/15/15)
-│   └── lane/
-│       ├── images/            ← TuSimple frames
-│       ├── masks/             ← Generated binary lane masks
-│       ├── annotations/       ← TuSimple JSON label files
-│       └── splits/            ← train.csv / val.csv / test.csv
+│   └── crack/
+│       ├── images/            ← CRACK500 + DeepCrack images (after download)
+│       ├── masks/             ← Binary crack masks
+│       └── splits/            ← train.csv / val.csv / test.csv (70/15/15)
 ├── src/
 │   ├── crack/
 │   │   ├── download_data.py   ← CRACK500/DeepCrack setup
 │   │   └── preprocess.py      ← Pairing, EDA, split, CSV manifests
-│   ├── lane/
-│   │   ├── download_data.py   ← TuSimple setup
-│   │   └── preprocess.py      ← JSON→mask, pairing, split, CSV manifests
 │   └── shared/
-│       ├── dataset.py         ← SegmentationDataset (used by both tasks)
+│       ├── dataset.py         ← SegmentationDataset
 │       ├── transforms.py      ← Albumentations train/val pipelines
 │       ├── unet.py            ← U-Net architecture
-│       ├── deeplabv3.py       ← DeepLabv3 (ResNet50 / MobileNetV3) architecture
+│       ├── deeplabv3.py       ← DeepLabv3 architecture wrapper
 │       ├── losses.py          ← BCEDiceLoss, FocalLoss
 │       ├── metrics.py         ← IoU, Dice, Pixel Accuracy, Precision, Recall
 │       └── trainer.py         ← Trainer with early stopping + LR scheduling
 ├── notebooks/
 │   ├── 01_EDA_crack.ipynb
-│   ├── 02_EDA_lane.ipynb
-│   ├── 03_train_crack_unet.ipynb
-│   ├── 04_train_lane_unet.ipynb
-│   ├── 05_evaluate_crack.ipynb
-│   ├── 06_evaluate_lane.ipynb
-│   └── 07_compare_crack_deeplabv3.ipynb
+│   ├── 02_train_crack_unet.ipynb
+│   ├── 03_evaluate_crack.ipynb
+│   └── 04_compare_crack_deeplabv3.ipynb
 └── experiments/
     ├── crack_unet_run1/       ← best_model.pth, train_log.csv, curves.png
-    ├── lane_unet_run1/        ← same structure
     └── crack_deeplabv3_run1/  ← DeepLabv3 experiment outputs
 ```
 
@@ -83,17 +68,12 @@ pip install -r requirements.txt
 python src/crack/download_data.py
 # Follow printed instructions, then:
 python src/crack/download_data.py --extract
-
-# Lane segmentation (TuSimple)
-python src/lane/download_data.py
-python src/lane/download_data.py --extract
 ```
 
 ### 3. Preprocess
 
 ```bash
-python src/crack/preprocess.py   # generates split CSVs for crack
-python src/lane/preprocess.py    # JSON→masks + split CSVs for lane
+python src/crack/preprocess.py   # generates split CSVs for crack dataset
 ```
 
 ### 4. Run Notebooks (in order)
@@ -102,17 +82,14 @@ Open in Jupyter or Google Colab:
 
 ```
 01_EDA_crack.ipynb               → EDA and augmentation preview
-02_EDA_lane.ipynb                → TuSimple EDA
-03_train_crack_unet.ipynb        → Train U-Net on crack detection
-04_train_lane_unet.ipynb         → Train U-Net on lane segmentation
-05_evaluate_crack.ipynb          → Test set evaluation + failure analysis
-06_evaluate_lane.ipynb           → Test set evaluation + failure analysis
-07_compare_crack_deeplabv3.ipynb → Head-to-head comparison: U-Net vs DeepLabv3
+02_train_crack_unet.ipynb        → Train U-Net on crack detection
+03_evaluate_crack.ipynb          → Test set evaluation + failure analysis
+04_compare_crack_deeplabv3.ipynb → Head-to-head comparison: U-Net vs DeepLabv3
 ```
 
 ### 5. Google Colab
 
-Set `RUN_ENV=colab` (done automatically at the top of each notebook).
+Set `RUN_ENV=colab` (done automatically at the top of each notebook).  
 Mount your Drive and point `COLAB_ROOT` in `config.py` to your project folder.
 
 ---
@@ -139,17 +116,18 @@ Mount your Drive and point `COLAB_ROOT` in `config.py` to your project folder.
 | Concept | Location |
 |---|---|
 | Supervised learning | Labeled image–mask pairs |
-| Dataset splitting (70/15/15) | `src/crack/preprocess.py`, `src/lane/preprocess.py` |
+| Dataset splitting (70/15/15) | `src/crack/preprocess.py` |
 | Preprocessing & normalisation | `src/shared/transforms.py` |
 | Data augmentation | `src/shared/transforms.py` |
 | Backpropagation | PyTorch autograd in `src/shared/trainer.py` |
 | Loss optimisation | `BCEDiceLoss`, Adam, LR scheduling |
-| Overfitting analysis | Train vs val curves in notebooks 03 & 04 |
-| Hyperparameter tuning | `config.py` + multiple experiment runs |
-| Quantitative evaluation | IoU, Dice, Pixel Acc in notebooks 05 & 06 |
+| Overfitting analysis | Train vs val curves in notebook 02 |
+| Hyperparameter tuning | `config.py` + experiment runs |
+| Quantitative evaluation | IoU, Dice, Pixel Acc in notebooks 03 & 04 |
 
 ---
 
 ## Authors
 
 Md. Sakif Chowdhury (2233359642) | Section 07 | Group 02 | CSE445
+
