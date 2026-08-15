@@ -1,7 +1,7 @@
 # Road Surface Crack Detection using Deep Image Segmentation
 
 **Course**: CSE445 Machine Learning Project  
-**Authors**: Md. Sakif Chowdhury (ID: 2233359642) & Araf Hussain (ID: 2111078642) | Section 07 | Group 02  
+**Authors**: Md. Sakif Chowdhury (ID: 2233359642), Araf Hussain (ID: 2111078642) & Dihan Shahriar (ID: 2031839042) | Section 07 | Group 02  
 
 ---
 
