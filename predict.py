@@ -112,14 +112,24 @@ def assess_severity(crack_ratio: float) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Predict road cracks for a single image.")
-    parser.add_argument("--image", type=str, required=True, help="Path to input road image")
+    parser.add_argument("--image", type=str, default=None, help="Path to input road image (optional: auto-picks sample if omitted)")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to best_model.pth")
     parser.add_argument("--threshold", type=float, default=0.5, help="Classification probability threshold (default: 0.5)")
     parser.add_argument("--save", type=str, default="prediction_result.png", help="Path to save output visual comparison")
     args = parser.parse_args()
 
+    # Auto-detect sample image if not passed
+    image_path = args.image
+    if image_path is None:
+        valid_exts = {".jpg", ".jpeg", ".png", ".bmp"}
+        candidates = [p for p in config.CRACK_IMG_DIR.glob("*.*") if p.suffix.lower() in valid_exts]
+        if not candidates:
+            raise FileNotFoundError(f"No sample images found in {config.CRACK_IMG_DIR}. Please specify --image <path>.")
+        image_path = candidates[0]
+        print(f"[i] No image specified. Auto-selected sample: {image_path.name}")
+
     model, device = load_model(args.checkpoint)
-    orig_rgb, pred_mask, overlay, crack_ratio = predict_image(args.image, model, device, args.threshold)
+    orig_rgb, pred_mask, overlay, crack_ratio = predict_image(image_path, model, device, args.threshold)
 
     has_crack = crack_ratio > 0.05
     severity = assess_severity(crack_ratio)
@@ -127,7 +137,7 @@ def main():
     print("\n" + "="*50)
     print("           ROAD DAMAGE ANALYSIS REPORT")
     print("="*50)
-    print(f"  File               : {Path(args.image).name}")
+    print(f"  File               : {Path(image_path).name}")
     print(f"  Crack Detected     : {'YES ⚠️' if has_crack else 'NO ✅'}")
     print(f"  Crack Surface Area : {crack_ratio:.3f}% of total area")
     print(f"  Damage Severity    : {severity}")
