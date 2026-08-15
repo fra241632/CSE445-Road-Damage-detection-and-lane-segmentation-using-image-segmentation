@@ -86,7 +86,6 @@ class Trainer:
             mode="max",       # maximise val IoU
             factor=cfg["lr_factor"],
             patience=cfg["lr_patience"],
-            verbose=True,
         )
 
         # Experiment directory

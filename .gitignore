@@ -8,9 +8,8 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Models
-*.pt
-*.pth
+# Models (allow experiment weights)
+!experiments/**/*.pth
 
 # Dataset
 dataset/
