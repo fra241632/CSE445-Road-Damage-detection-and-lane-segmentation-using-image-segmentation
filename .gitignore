@@ -10,11 +10,14 @@ __pycache__/
 
 # Models
 *.pt
+*.pth
 
 # Dataset
 dataset/
 datasets/
 *.zip
+data/*
+!data/README.md
 
 # Colab cache
 sample_data/

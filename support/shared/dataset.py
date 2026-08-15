@@ -1,5 +1,5 @@
 """
-src/shared/dataset.py
+support/shared/dataset.py
 ----------------------
 PyTorch Dataset for binary crack segmentation.
 
@@ -87,3 +87,5 @@ class SegmentationDataset(Dataset):
     def __repr__(self) -> str:
         return (f"SegmentationDataset(n={len(self)}, "
                 f"img_size={self.img_size}, transform={'yes' if self.transform else 'no'})")
+
+

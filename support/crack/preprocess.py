@@ -1,5 +1,5 @@
 """
-src/crack/preprocess.py
+support/crack/preprocess.py
 ------------------------
 Preprocessing and EDA utilities for the crack detection dataset.
 
@@ -10,7 +10,7 @@ Steps performed:
   4. save_splits()     – write train.csv / val.csv / test.csv manifests
 
 Usage (after download_data.py --extract has been run):
-    python src/crack/preprocess.py
+    python support/crack/preprocess.py
 """
 
 from __future__ import annotations
@@ -168,7 +168,7 @@ def main():
 
     if not CRACK_IMG_DIR.exists() or not any(CRACK_IMG_DIR.iterdir()):
         print(f"\n[!] No images found in {CRACK_IMG_DIR}")
-        print("    Run: python src/crack/download_data.py --extract   first.")
+        print("    Run: python support/crack/download_data.py --extract   first.")
         return
 
     pairs  = load_pairs()
@@ -180,3 +180,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

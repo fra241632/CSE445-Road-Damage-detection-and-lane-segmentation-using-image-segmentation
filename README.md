@@ -29,7 +29,7 @@ ML Project/
 │       ├── images/            ← CRACK500 + DeepCrack images (after download)
 │       ├── masks/             ← Binary crack masks
 │       └── splits/            ← train.csv / val.csv / test.csv (70/15/15)
-├── src/
+├── support/
 │   ├── crack/
 │   │   ├── download_data.py   ← CRACK500/DeepCrack setup
 │   │   └── preprocess.py      ← Pairing, EDA, split, CSV manifests
@@ -65,15 +65,15 @@ pip install -r requirements.txt
 
 ```bash
 # Crack detection (CRACK500 + DeepCrack)
-python src/crack/download_data.py
+python support/crack/download_data.py
 # Follow printed instructions, then:
-python src/crack/download_data.py --extract
+python support/crack/download_data.py --extract
 ```
 
 ### 3. Preprocess
 
 ```bash
-python src/crack/preprocess.py   # generates split CSVs for crack dataset
+python support/crack/preprocess.py   # generates split CSVs for crack dataset
 ```
 
 ### 4. Run Notebooks (in order)
@@ -116,10 +116,10 @@ Mount your Drive and point `COLAB_ROOT` in `config.py` to your project folder.
 | Concept | Location |
 |---|---|
 | Supervised learning | Labeled image–mask pairs |
-| Dataset splitting (70/15/15) | `src/crack/preprocess.py` |
-| Preprocessing & normalisation | `src/shared/transforms.py` |
-| Data augmentation | `src/shared/transforms.py` |
-| Backpropagation | PyTorch autograd in `src/shared/trainer.py` |
+| Dataset splitting (70/15/15) | `support/crack/preprocess.py` |
+| Preprocessing & normalisation | `support/shared/transforms.py` |
+| Data augmentation | `support/shared/transforms.py` |
+| Backpropagation | PyTorch autograd in `support/shared/trainer.py` |
 | Loss optimisation | `BCEDiceLoss`, Adam, LR scheduling |
 | Overfitting analysis | Train vs val curves in notebook 02 |
 | Hyperparameter tuning | `config.py` + experiment runs |
@@ -130,4 +130,5 @@ Mount your Drive and point `COLAB_ROOT` in `config.py` to your project folder.
 ## Authors
 
 Md. Sakif Chowdhury (2233359642) | Section 07 | Group 02 | CSE445
+
 

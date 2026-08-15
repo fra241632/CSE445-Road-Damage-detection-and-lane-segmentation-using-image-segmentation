@@ -1,5 +1,5 @@
 """
-src/shared/trainer.py
+support/shared/trainer.py
 ----------------------
 Training engine for U-Net segmentation models.
 
@@ -13,7 +13,7 @@ Features:
   - Experiment directory creation with config snapshot
 
 Usage (in a notebook or script):
-    from src.shared import UNet, BCEDiceLoss, Trainer
+    from support.shared import UNet, BCEDiceLoss, Trainer
     import config
 
     cfg     = config.CRACK_UNET
@@ -279,3 +279,5 @@ class Trainer:
             print(f"[Trainer] Loaded best checkpoint from {self.best_model_path}")
         else:
             print(f"[!] No checkpoint found at {self.best_model_path}")
+
+

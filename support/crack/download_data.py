@@ -1,5 +1,5 @@
 """
-src/crack/download_data.py
+support/crack/download_data.py
 --------------------------
 Guides the user through obtaining CRACK500 (and optionally DeepCrack),
 then organizes the raw archives into the expected directory layout:
@@ -9,7 +9,7 @@ then organizes the raw archives into the expected directory layout:
         masks/    ← corresponding binary masks (.png, same stem)
 
 Usage:
-    python src/crack/download_data.py [--extract]
+    python support/crack/download_data.py [--extract]
 
 Flags:
     --extract   After placing the archives in data/crack/, run this flag
@@ -55,7 +55,7 @@ INSTRUCTIONS = """
    {crack_dir}
 
 4. Then re-run this script with the --extract flag:
-   python src/crack/download_data.py --extract
+   python support/crack/download_data.py --extract
 
 The script will:
   - Unzip the archives
@@ -181,3 +181,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

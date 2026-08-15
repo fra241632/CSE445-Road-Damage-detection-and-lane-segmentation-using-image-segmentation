@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-src/shared/metrics.py
+support/shared/metrics.py
 ----------------------
 Evaluation metrics for binary segmentation.
 
@@ -160,3 +160,5 @@ if __name__ == "__main__":
     assert m2["iou"] < 0.5
 
     print("✓ Metrics sanity check passed.")
+
+

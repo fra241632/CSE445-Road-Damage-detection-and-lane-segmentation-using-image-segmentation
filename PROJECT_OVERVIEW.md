@@ -113,11 +113,10 @@ To run the complete project, execute the notebooks in `notebooks/` in order:
 pip install -r requirements.txt
 
 # 2. Organize & preprocess data
-python src/crack/download_data.py --extract
-python src/crack/preprocess.py
+python main.py --setup
 
 # 3. Open Jupyter Notebook
-jupyter notebook
+python main.py --jupyter
 ```
 
 ### Google Colab Execution:

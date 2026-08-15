@@ -1,5 +1,5 @@
 """
-src/shared/deeplabv3.py
+support/shared/deeplabv3.py
 ------------------------
 DeepLabv3 wrapper for binary segmentation comparison against U-Net.
 
@@ -9,7 +9,7 @@ Features:
   - Compatible with Trainer, BCEDiceLoss, and SegmentationDataset
 
 Usage:
-    from src.shared.deeplabv3 import DeepLabV3Segmentation
+    from support.shared.deeplabv3 import DeepLabV3Segmentation
     model = DeepLabV3Segmentation(in_channels=3, out_channels=1, backbone="resnet50", pretrained=True)
 """
 
@@ -74,3 +74,5 @@ if __name__ == "__main__":
     print(f"Output: {out.shape}")
     assert out.shape == (2, 1, 256, 256)
     print("✓ DeepLabV3 sanity check passed.")
+
+
