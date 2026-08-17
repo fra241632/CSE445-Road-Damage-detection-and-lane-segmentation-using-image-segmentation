@@ -1,0 +1,1 @@
+epoch,lr,train_loss,train_iou,train_dice,train_pixel_acc,val_loss,val_iou,val_dice,val_pixel_acc,epoch_time_s

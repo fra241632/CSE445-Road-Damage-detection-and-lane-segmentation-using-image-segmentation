@@ -1,0 +1,17 @@
+{
+  "run_name": "crack_stage2_unet_finetuned",
+  "in_channels": 3,
+  "out_channels": 1,
+  "base_features": 32,
+  "epochs": 75,
+  "batch_size": 32,
+  "lr": 0.0001,
+  "lr_patience": 4,
+  "lr_factor": 0.5,
+  "early_stop_patience": 12,
+  "bce_weight": 0.5,
+  "dice_weight": 0.5,
+  "device": "cuda",
+  "pretrained_path": "D:\\Road_Damage_Project\\experiments\\crack_stage1_unet\\best_model.pth",
+  "resume_checkpoint": "D:\\Road_Damage_Project\\experiments\\crack_stage2_unet_finetuned\\best_model.pth"
+}

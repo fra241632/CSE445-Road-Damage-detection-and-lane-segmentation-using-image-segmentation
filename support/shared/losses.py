@@ -28,22 +28,31 @@ SMOOTH = 1e-6   # small constant to prevent division by zero in Dice
 # ---------------------------------------------------------------------------
 # Dice loss
 # ---------------------------------------------------------------------------
-def dice_loss(pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+def dice_loss(pred: torch.Tensor, target: torch.Tensor, smooth: float = SMOOTH) -> torch.Tensor:
     """
-    Soft Dice loss for binary segmentation.
+    Per-sample Soft Dice loss for binary segmentation.
 
-    Dice = (2 * |pred ∩ target|) / (|pred| + |target|)
-    Loss = 1 - Dice
+    Dice = (2 * |pred ∩ target| + smooth) / (|pred| + |target| + smooth)
+    Loss = 1 - mean(Dice_batch)
 
     'Soft' means we use the raw probabilities (not thresholded),
     which makes the loss differentiable everywhere.
+    Computes Dice score per image in the batch and averages across the batch
+    to avoid batch-wide denominator domination on sparse targets.
     """
-    pred   = pred.contiguous().view(-1)
-    target = target.contiguous().view(-1)
+    pred   = pred.float()
+    target = target.float()
 
-    intersection = (pred * target).sum()
-    dice_coeff   = (2.0 * intersection + SMOOTH) / (pred.sum() + target.sum() + SMOOTH)
-    return 1.0 - dice_coeff
+    if pred.ndim >= 2:
+        dim = tuple(range(1, pred.ndim))
+        intersection = (pred * target).sum(dim=dim)
+        union = pred.sum(dim=dim) + target.sum(dim=dim)
+        dice_coeff = (2.0 * intersection + smooth) / (union + smooth)
+        return (1.0 - dice_coeff).mean()
+    else:
+        intersection = (pred * target).sum()
+        dice_coeff   = (2.0 * intersection + smooth) / (pred.sum() + target.sum() + smooth)
+        return 1.0 - dice_coeff
 
 
 # ---------------------------------------------------------------------------
@@ -62,10 +71,14 @@ def focal_loss(pred:   torch.Tensor,
                 foreground is rare (crack pixels).
         gamma : focusing parameter. gamma=0 reduces to BCE; gamma=2 is typical.
     """
-    bce = F.binary_cross_entropy(pred, target, reduction="none")
-    p_t = torch.exp(-bce)   # = pred for positives, (1-pred) for negatives
-    focal = alpha * (1 - p_t) ** gamma * bce
-    return focal.mean()
+    device_type = pred.device.type
+    with torch.amp.autocast(device_type=device_type, enabled=False):
+        pred_f   = pred.float().clamp(1e-7, 1.0 - 1e-7)
+        target_f = target.float()
+        bce = F.binary_cross_entropy(pred_f, target_f, reduction="none")
+        p_t = torch.exp(-bce)   # = pred for positives, (1-pred) for negatives
+        focal = alpha * (1 - p_t) ** gamma * bce
+        return focal.mean()
 
 
 # ---------------------------------------------------------------------------
@@ -102,9 +115,13 @@ class BCEDiceLoss(nn.Module):
         self._pos_weight = pw   # stored for device movement
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        bce  = self.bce_fn(pred, target)
-        dice = dice_loss(pred, target)
-        return self.bce_w * bce + self.dice_w * dice
+        device_type = pred.device.type
+        with torch.amp.autocast(device_type=device_type, enabled=False):
+            pred_f   = pred.float().clamp(1e-7, 1.0 - 1e-7)
+            target_f = target.float()
+            bce  = self.bce_fn(pred_f, target_f)
+            dice = dice_loss(pred_f, target_f)
+            return self.bce_w * bce + self.dice_w * dice
 
     def extra_repr(self) -> str:
         return f"bce_weight={self.bce_w}, dice_weight={self.dice_w}"
@@ -125,6 +142,6 @@ if __name__ == "__main__":
     f_loss  = focal_loss(pred, target)
     print(f"FocalLoss  : {f_loss.item():.4f}")
 
-    print("✓ Loss sanity check passed.")
+    print("[OK] Loss sanity check passed.")
 
 

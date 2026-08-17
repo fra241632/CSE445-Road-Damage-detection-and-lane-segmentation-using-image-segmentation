@@ -19,6 +19,14 @@ datasets/
 data/*
 !data/README.md
 
+# Scratch & temporary artifacts
+scratch/
+experiments/*.mp4
+experiments/*.jpg
+!experiments/**/config_snapshot.json
+!experiments/**/train_log.csv
+!experiments/**/curves.png
+
 # Colab cache
 sample_data/
 

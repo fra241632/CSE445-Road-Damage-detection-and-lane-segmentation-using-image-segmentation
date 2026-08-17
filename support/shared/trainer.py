@@ -75,7 +75,15 @@ class Trainer:
         requested = cfg.get("device", "cuda")
         self.device = torch.device("cuda" if (requested == "cuda" and torch.cuda.is_available()) else "cpu")
         print(f"[Trainer] Using device: {self.device}")
+        if self.device.type == "cuda":
+            torch.backends.cudnn.benchmark = True
         self.model = model.to(self.device)
+
+        # Mixed precision (AMP)
+        self.use_amp = cfg.get("use_amp", True) and (self.device.type == "cuda")
+        self.scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
+        if self.use_amp:
+            print("[Trainer] Mixed precision (AMP) enabled.")
 
         # Optimizer
         self.optimizer = Adam(self.model.parameters(), lr=cfg["lr"])
@@ -84,9 +92,8 @@ class Trainer:
         self.scheduler = ReduceLROnPlateau(
             self.optimizer,
             mode="max",       # maximise val IoU
-            factor=cfg["lr_factor"],
-            patience=cfg["lr_patience"],
-            verbose=True,
+            factor=cfg.get("lr_factor", 0.5),
+            patience=cfg.get("lr_patience", 4),
         )
 
         # Experiment directory
@@ -94,28 +101,69 @@ class Trainer:
         self.exp_dir.mkdir(parents=True, exist_ok=True)
 
         self.best_model_path = self.exp_dir / "best_model.pth"
+        self.last_model_path = self.exp_dir / "last_model.pth"
         self.log_csv_path    = self.exp_dir / "train_log.csv"
 
         # Internal state
         self.best_val_iou      = 0.0
         self.epochs_no_improve = 0
         self.history           = []   # list of dicts, one per epoch
+        self.start_epoch       = 1
+
+        # Check for resumption
+        resume_from = cfg.get("resume_checkpoint", None)
+        if resume_from and Path(resume_from).exists():
+            self._load_resume_checkpoint(Path(resume_from))
 
         # Save config snapshot
         snapshot_path = self.exp_dir / "config_snapshot.json"
         with open(snapshot_path, "w") as f:
-            json.dump(cfg, f, indent=2)
-        print(f"[Trainer] Config snapshot → {snapshot_path}")
+            json.dump(cfg, f, indent=2, default=str)
+        print(f"[Trainer] Config snapshot -> {snapshot_path}")
 
-        # Initialise CSV log
-        with open(self.log_csv_path, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                "epoch", "lr",
-                "train_loss", "train_iou", "train_dice", "train_pixel_acc",
-                "val_loss",   "val_iou",   "val_dice",   "val_pixel_acc",
-                "epoch_time_s",
-            ])
+        # Initialise CSV log if new
+        if not self.log_csv_path.exists() or self.log_csv_path.stat().st_size == 0:
+            with open(self.log_csv_path, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    "epoch", "lr",
+                    "train_loss", "train_iou", "train_dice", "train_pixel_acc",
+                    "val_loss",   "val_iou",   "val_dice",   "val_pixel_acc",
+                    "epoch_time_s",
+                ])
+
+    def _load_resume_checkpoint(self, ckpt_path: Path):
+        """Loads weights and state from an existing checkpoint."""
+        print(f"[Trainer] Resuming from checkpoint: {ckpt_path}")
+        state = torch.load(ckpt_path, map_location=self.device)
+        if isinstance(state, dict) and "model_state_dict" in state:
+            self.model.load_state_dict(state["model_state_dict"])
+            if "optimizer_state_dict" in state:
+                try:
+                    self.optimizer.load_state_dict(state["optimizer_state_dict"])
+                except Exception:
+                    pass
+            if "best_val_iou" in state:
+                self.best_val_iou = state["best_val_iou"]
+            if "epoch" in state:
+                self.start_epoch = state["epoch"] + 1
+        elif isinstance(state, dict):
+            # Pure model state dict
+            self.model.load_state_dict(state)
+
+        # Sync start_epoch and best_val_iou from train_log.csv if present
+        if self.log_csv_path.exists():
+            try:
+                import pandas as pd
+                df_log = pd.read_csv(self.log_csv_path)
+                if not df_log.empty and "epoch" in df_log.columns:
+                    self.start_epoch = int(df_log["epoch"].max()) + 1
+                    if "val_iou" in df_log.columns:
+                        self.best_val_iou = float(df_log["val_iou"].max())
+            except Exception:
+                pass
+
+        print(f"[Trainer] Resumed model state. Baseline best Val IoU: {self.best_val_iou:.4f}, Start epoch: {self.start_epoch}")
 
     # -----------------------------------------------------------------------
     # Single epoch: training
@@ -127,14 +175,19 @@ class Trainer:
 
         loop = tqdm(self.train_loader, desc="  Train", leave=False, ncols=90)
         for images, masks in loop:
-            images = images.to(self.device)
-            masks  = masks.to(self.device)
+            images = images.to(self.device, non_blocking=True)
+            masks  = masks.to(self.device, non_blocking=True)
 
-            self.optimizer.zero_grad()
-            preds = self.model(images)
-            loss  = self.loss_fn(preds, masks)
-            loss.backward()
-            self.optimizer.step()
+            self.optimizer.zero_grad(set_to_none=True)
+            with torch.amp.autocast(device_type=self.device.type, enabled=self.use_amp):
+                preds = self.model(images)
+                loss  = self.loss_fn(preds, masks)
+
+            self.scaler.scale(loss).backward()
+            self.scaler.unscale_(self.optimizer)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
 
             m = compute_all_metrics(preds.detach(), masks)
             total_loss += loss.item()
@@ -161,11 +214,12 @@ class Trainer:
 
         loop = tqdm(self.val_loader, desc="  Val  ", leave=False, ncols=90)
         for images, masks in loop:
-            images = images.to(self.device)
-            masks  = masks.to(self.device)
+            images = images.to(self.device, non_blocking=True)
+            masks  = masks.to(self.device, non_blocking=True)
 
-            preds = self.model(images)
-            loss  = self.loss_fn(preds, masks)
+            with torch.amp.autocast(device_type=self.device.type, enabled=self.use_amp):
+                preds = self.model(images)
+                loss  = self.loss_fn(preds, masks)
 
             m = compute_all_metrics(preds, masks)
             total_loss += loss.item()
@@ -189,17 +243,22 @@ class Trainer:
         Train for n_epochs (or cfg["epochs"] if None).
 
         Returns:
-            self.history — list of per-epoch metric dicts.
+            self.history - list of per-epoch metric dicts.
         """
-        n_epochs = n_epochs or self.cfg["epochs"]
-        patience = self.cfg["early_stop_patience"]
+        total_epochs = n_epochs or self.cfg["epochs"]
+        patience     = self.cfg["early_stop_patience"]
+        start_ep     = self.start_epoch
 
-        print(f"\n{'═'*70}")
+        if start_ep > total_epochs:
+            print(f"[Trainer] Model already trained up to epoch {start_ep - 1} >= target {total_epochs}. Extending total epochs to {start_ep + total_epochs - 1}.")
+            total_epochs = start_ep + total_epochs - 1
+
+        print(f"\n{'='*70}")
         print(f"  Starting training: {self.cfg['run_name']}")
-        print(f"  Epochs: {n_epochs}   Device: {self.device}   LR: {self.cfg['lr']}")
+        print(f"  Epochs: {start_ep} to {total_epochs} (Total: {total_epochs}) | Device: {self.device} | Initial LR: {self.optimizer.param_groups[0]['lr']:.2e}")
         print(f"  Early stopping patience: {patience}")
         print(f"  Output dir: {self.exp_dir}")
-        print(f"{'═'*70}\n")
+        print(f"{'='*70}\n")
 
         # Header row for pretty-print table
         hdr = (f"{'Ep':>4} {'LR':>8} | "
@@ -208,7 +267,7 @@ class Trainer:
         print(hdr)
         print("-" * len(hdr))
 
-        for epoch in range(1, n_epochs + 1):
+        for epoch in range(start_ep, total_epochs + 1):
             t0 = time.time()
 
             train_m = self._train_epoch()
@@ -220,16 +279,32 @@ class Trainer:
             # LR scheduler step
             self.scheduler.step(val_m["val_iou"])
 
-            # Check if best
-            is_best = val_m["val_iou"] > self.best_val_iou
+            # Check if best (guarded against degenerate all-ones predictions where pixel_acc is near 0)
+            is_valid = (val_m["val_pixel_acc"] >= 0.70)
+            is_best  = is_valid and (val_m["val_iou"] > self.best_val_iou)
+            
+            # Checkpoint dict
+            ckpt_state = {
+                "epoch": epoch,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "best_val_iou": max(self.best_val_iou, val_m["val_iou"]),
+                "val_iou": val_m["val_iou"],
+                "val_dice": val_m["val_dice"],
+                "train_iou": train_m["train_iou"],
+            }
+
             if is_best:
                 self.best_val_iou = val_m["val_iou"]
                 self.epochs_no_improve = 0
-                torch.save(self.model.state_dict(), self.best_model_path)
-                best_flag = "✓ NEW"
+                torch.save(ckpt_state, self.best_model_path)
+                best_flag = "* NEW"
             else:
                 self.epochs_no_improve += 1
                 best_flag = ""
+
+            # Always save last checkpoint
+            torch.save(ckpt_state, self.last_model_path)
 
             # Print row
             print(
@@ -264,8 +339,8 @@ class Trainer:
                 break
 
         print(f"\n[Trainer] Training complete. Best val IoU: {self.best_val_iou:.4f}")
-        print(f"[Trainer] Best checkpoint → {self.best_model_path}")
-        print(f"[Trainer] Training log    → {self.log_csv_path}\n")
+        print(f"[Trainer] Best checkpoint -> {self.best_model_path}")
+        print(f"[Trainer] Training log    -> {self.log_csv_path}\n")
 
         return self.history
 
@@ -275,7 +350,12 @@ class Trainer:
     def load_best(self) -> None:
         """Load the best saved checkpoint into self.model."""
         if self.best_model_path.exists():
-            self.model.load_state_dict(torch.load(self.best_model_path, map_location=self.device))
+            state = torch.load(self.best_model_path, map_location=self.device)
+            if isinstance(state, dict) and "model_state_dict" in state:
+                state = state["model_state_dict"]
+            elif isinstance(state, dict) and "state_dict" in state:
+                state = state["state_dict"]
+            self.model.load_state_dict(state)
             print(f"[Trainer] Loaded best checkpoint from {self.best_model_path}")
         else:
             print(f"[!] No checkpoint found at {self.best_model_path}")
