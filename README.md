@@ -61,7 +61,8 @@ Road_Damage_Project/
 │   ├── final_report.pdf             ← Final IEEE-format research report
 │   ├── update_presentation.pptx     ← Midterm update presentation
 │   ├── update_report.pdf            ← Midterm progress report
-│   └── demo_video.mp4               ← 1-minute system demo video
+│   ├── demo_video.mp4               ← System demo video 1 (dashcam inference)
+│   └── demo_video_2.mp4             ← System demo video 2 (survey footage inference)
 ├── support/
 │   ├── crack/
 │   │   ├── download_data.py         ← Dataset download helpers
@@ -202,7 +203,7 @@ python main.py --infer path/to/dashcam_video.mp4 --output result.mp4
 | Overfitting analysis | Train vs val curves in notebook 02 |
 | Hyperparameter tuning | `config.py` + experiment runs |
 | Quantitative evaluation | IoU, Dice, Pixel Acc in notebooks 03 & 04 |
-| Real-world video inference | Image + video pipeline in `support/shared/inference.py` |
+| Post-processed video inference | Image + video pipeline in `support/shared/inference.py` |
 
 ---
 
@@ -215,7 +216,7 @@ Section 07 | Group 02 | CSE445
 
 ## Video Demonstrations
 
-Watch real-time crack segmentation inference on real-world dashcam and survey footage:
+Watch post-processed crack segmentation video inference on real-world dashcam and survey footage:
 
 | 🎬 **Demo Video 1: Dashcam Road Crack Detection** | 🎬 **Demo Video 2: High-Resolution Pavement Survey** |
 |:---:|:---:|

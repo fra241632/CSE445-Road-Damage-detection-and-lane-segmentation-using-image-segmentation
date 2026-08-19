@@ -168,7 +168,8 @@ Road_Damage_Project/
 │   ├── final_report.pdf                ← Final IEEE-format research report
 │   ├── update_presentation.pptx        ← Midterm update presentation
 │   ├── update_report.pdf               ← Midterm progress report
-│   └── demo_video.mp4                  ← 1-minute system demo video
+│   ├── demo_video.mp4                  ← System demo video 1 (dashcam inference)
+│   └── demo_video_2.mp4                ← System demo video 2 (survey footage inference)
 ├── support/
 │   ├── crack/
 │   │   ├── preprocess.py               ← Pairs images/masks, generates split CSVs
