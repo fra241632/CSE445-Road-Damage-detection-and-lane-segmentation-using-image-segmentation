@@ -135,38 +135,35 @@ python support/crack/train_2stage.py --stage 1   # Stage 1 only
 python support/crack/train_2stage.py --stage 2   # Stage 2 fine-tuning only
 ```
 
-### 5. Run Notebooks (in order)
+### 5. Running in VS Code or Jupyter
 
-```bash
-python main.py --jupyter
-```
+* **In VS Code**:
+  1. Open this repository folder in VS Code (`File > Open Folder...`).
+  2. Select your Python interpreter (`Ctrl+Shift+P` → `Python: Select Interpreter`).
+  3. Open any `.ipynb` notebook from the `notebooks/` directory and click **Run All** or run cells step-by-step.
+  4. Use the integrated VS Code terminal to run training or inference scripts.
 
-Then open in order:
-
-```
-01_EDA_crack.ipynb               → EDA and augmentation preview
-02_train_crack_unet.ipynb        → Train U-Net on crack detection
-03_evaluate_crack.ipynb          → Test set evaluation + failure analysis
-04_compare_crack_deeplabv3.ipynb → Head-to-head comparison: U-Net vs DeepLabv3
-05_inference_crack.ipynb         → Run crack detection on your own images/videos
-```
+* **In Classic Jupyter**:
+  ```bash
+  python main.py --jupyter
+  ```
 
 ### 6. Run Inference (CLI)
 
 ```bash
-# On an image
+# Test on a single road image
 python main.py --infer path/to/road_image.jpg
 
-# On a video
+# Test on a driving video
 python main.py --infer path/to/dashcam_video.mp4 --output result.mp4
 ```
 
-### 7. Google Colab
+### 7. Google Colab Execution
 
 1. Upload the project folder to Google Drive.
 2. Open any notebook in Google Colab.
-3. Set `RUN_ENV=colab` (done automatically at the top of each notebook).
-4. Runs seamlessly on T4 GPU acceleration.
+3. Set `RUN_ENV=colab` (detected automatically at the top of each notebook).
+4. Select `Runtime > Change runtime type > T4 GPU`.
 
 ---
 
