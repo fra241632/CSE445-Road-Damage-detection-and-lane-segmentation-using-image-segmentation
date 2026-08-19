@@ -7,15 +7,6 @@
 **CSE445 Machine Learning Project**  
 Group 02 | Section 07
 
-## Video Demonstrations
-
-Watch real-time crack segmentation inference on real-world dashcam and survey footage:
-
-| 🎬 **Demo Video 1: Dashcam Road Crack Detection** | 🎬 **Demo Video 2: High-Resolution Pavement Survey** |
-|:---:|:---:|
-| [![Road Crack Detection Demo 1](https://img.youtube.com/vi/-uLCMcTAiGo/0.jpg)](https://www.youtube.com/watch?v=-uLCMcTAiGo) | [![Road Crack Detection Demo 2](https://img.youtube.com/vi/SEnlQzeg_Fk/0.jpg)](https://www.youtube.com/watch?v=SEnlQzeg_Fk) |
-| [▶ **Watch Demo 1 on YouTube**](https://www.youtube.com/watch?v=-uLCMcTAiGo) | [▶ **Watch Demo 2 on YouTube**](https://www.youtube.com/watch?v=SEnlQzeg_Fk) |
-
 ---
 
 ## Overview
@@ -219,3 +210,15 @@ python main.py --infer path/to/dashcam_video.mp4 --output result.mp4
 
 Md. Sakif Chowdhury (2233359642) | Araf Hussain (2111078642) | Dihan Shahriar (2031839042)  
 Section 07 | Group 02 | CSE445
+
+---
+
+## Video Demonstrations
+
+Watch real-time crack segmentation inference on real-world dashcam and survey footage:
+
+| 🎬 **Demo Video 1: Dashcam Road Crack Detection** | 🎬 **Demo Video 2: High-Resolution Pavement Survey** |
+|:---:|:---:|
+| [![Road Crack Detection Demo 1](https://img.youtube.com/vi/-uLCMcTAiGo/0.jpg)](https://www.youtube.com/watch?v=-uLCMcTAiGo) | [![Road Crack Detection Demo 2](https://img.youtube.com/vi/SEnlQzeg_Fk/0.jpg)](https://www.youtube.com/watch?v=SEnlQzeg_Fk) |
+| [▶ **Watch Demo 1 on YouTube**](https://www.youtube.com/watch?v=-uLCMcTAiGo) | [▶ **Watch Demo 2 on YouTube**](https://www.youtube.com/watch?v=SEnlQzeg_Fk) |
+
