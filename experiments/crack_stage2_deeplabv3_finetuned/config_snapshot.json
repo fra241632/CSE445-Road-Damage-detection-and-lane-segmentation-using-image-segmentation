@@ -1,0 +1,18 @@
+{
+  "run_name": "crack_stage2_deeplabv3_finetuned",
+  "in_channels": 3,
+  "out_channels": 1,
+  "backbone": "resnet50",
+  "pretrained": true,
+  "epochs": 50,
+  "batch_size": 64,
+  "lr": 0.0001,
+  "lr_patience": 4,
+  "lr_factor": 0.5,
+  "early_stop_patience": 10,
+  "bce_weight": 0.5,
+  "dice_weight": 0.5,
+  "device": "cuda",
+  "pretrained_path": "D:\\Road_Damage_Project\\experiments\\crack_stage1_deeplabv3\\best_model.pth",
+  "resume_checkpoint": "D:\\Road_Damage_Project\\experiments\\crack_stage2_deeplabv3_finetuned\\best_model.pth"
+}

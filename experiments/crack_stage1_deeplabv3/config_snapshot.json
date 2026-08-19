@@ -1,0 +1,16 @@
+{
+  "run_name": "crack_stage1_deeplabv3",
+  "in_channels": 3,
+  "out_channels": 1,
+  "backbone": "resnet50",
+  "pretrained": true,
+  "epochs": 40,
+  "batch_size": 64,
+  "lr": 0.0002,
+  "lr_patience": 4,
+  "lr_factor": 0.5,
+  "early_stop_patience": 8,
+  "bce_weight": 0.5,
+  "dice_weight": 0.5,
+  "device": "cuda"
+}
