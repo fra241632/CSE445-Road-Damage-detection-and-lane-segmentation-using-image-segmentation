@@ -1,5 +1,9 @@
 # Road Surface Crack Detection Using Deep Learning
 
+<p align="center">
+  <img src="assets/demo.gif" alt="Road Surface Crack Detection Demo" width="700">
+</p>
+
 **CSE445 Machine Learning Project**  
 Group 02 | Section 07
 
