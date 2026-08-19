@@ -21,6 +21,7 @@ data/*
 
 # Scratch & temporary artifacts
 scratch/
+*_AUDIT_AND_FIXES.md
 experiments/*.mp4
 experiments/*.jpg
 !experiments/**/config_snapshot.json
