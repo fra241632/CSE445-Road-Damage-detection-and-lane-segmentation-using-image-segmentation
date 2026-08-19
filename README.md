@@ -25,12 +25,19 @@ A **2-stage transfer learning** approach is used for both models:
 
 ## Results
 
+### Validation Performance (Best Epochs)
 | Model & Stage | Best Epoch | Val IoU | Val Dice | Val Pixel Acc |
 |---|:---:|:---:|:---:|:---:|
 | U-Net — Stage 1 (Closeup pre-train) | 7 | 0.5118 | 0.6536 | 95.78% |
 | U-Net — Stage 2 (Dashcam fine-tune) | 73 | 0.1930 | 0.2881 | 99.52% |
 | DeepLabv3 — Stage 1 (Closeup pre-train) | 8 | 0.5801 | 0.7136 | 97.09% |
-| DeepLabv3 — Stage 2 (Dashcam fine-tune) | — | ~0.135 | ~0.214 | ~99.4% |
+| DeepLabv3 — Stage 2 (Dashcam fine-tune) | 48 | 0.1335 | 0.2124 | 99.36% |
+
+### Held-Out Test Split Performance (Stage 2 Dashcam)
+| Model | Test IoU | Test Dice | Test Precision | Test Recall | Test Pixel Acc | Params |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **U-Net (Two-Stage)** | **0.2034** | **0.3009** | **0.3316** | **0.3644** | **99.51%** | **~7.8M** |
+| DeepLabv3 (Two-Stage) | 0.1393 | 0.2219 | 0.2233 | 0.3018 | 99.35% | ~42.0M |
 
 > **Note on Stage 2 IoU**: Human annotators draw thick, coarse masks around thin cracks in dashcam footage. The model predicts pixel-precise boundaries. IoU penalizes this mismatch heavily — the segmentation is qualitatively accurate even where the number appears low.
 
@@ -44,16 +51,17 @@ Road_Damage_Project/
 ├── main.py                          ← CLI entry point (--setup, --infer, --jupyter)
 ├── requirements.txt
 ├── data/
-│   ├── README.md                    ← Dataset download instructions
-│   ├── best/                        ← Demo/result videos
+│   ├── README.md                    ← Dataset download instructions & layout
 │   └── crack/
 │       ├── closeup/                 ← Stage 1 data (CRACK500, DeepCrack, macro shots)
-│       │   ├── images/
-│       │   └── masks/
 │       ├── dashcam/                 ← Stage 2 data (real-world dashcam/drone footage)
-│       │   ├── images/
-│       │   └── masks/
 │       └── splits/                  ← Auto-generated CSV manifests (train/val/test)
+├── others/
+│   ├── final_presentation.pptx      ← Final project presentation
+│   ├── final_report.pdf             ← Final IEEE-format research report
+│   ├── update_presentation.pptx     ← Midterm update presentation
+│   ├── update_report.pdf            ← Midterm progress report
+│   └── demo_video.mp4               ← 1-minute system demo video
 ├── support/
 │   ├── crack/
 │   │   ├── download_data.py         ← Dataset download helpers
@@ -80,7 +88,8 @@ Road_Damage_Project/
     ├── crack_stage1_unet/                  ← U-Net Stage 1 (best_model.pth, train_log.csv)
     ├── crack_stage2_unet_finetuned/        ← U-Net Stage 2 (best_model.pth, train_log.csv)
     ├── crack_stage1_deeplabv3/             ← DeepLabv3 Stage 1 checkpoint & log
-    └── crack_stage2_deeplabv3_finetuned/   ← DeepLabv3 Stage 2 checkpoint & log
+    ├── crack_stage2_deeplabv3_finetuned/   ← DeepLabv3 Stage 2 checkpoint & log
+    └── *.png                               ← Generated figures and evaluation plots
 ```
 
 ---

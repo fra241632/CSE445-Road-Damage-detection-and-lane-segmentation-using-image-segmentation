@@ -92,9 +92,9 @@ All images and masks are resized to **256 × 256 px**. Masks are binarized at th
 - **Decoder**: 4 upsampling stages (Bilinear ↑2 + skip-concat + DoubleConv). Restores full resolution using skip connections to recover fine crack boundaries.
 - **Output Head**: `1×1 Conv → Sigmoid` → probability map `[0, 1]`.
 
-### B. DeepLabv3 Comparison Model (~40M parameters)
+### B. DeepLabv3 Comparison Model (~42.0M parameters)
 - **Backbone**: ResNet-50 (pretrained on ImageNet/COCO).
-- **ASPP Module**: 5 parallel atrous branches (rates: 1, 6, 12, 18 + global average pooling) for multi-scale context capture.
+- **ASPP Module**: 5 parallel atrous branches (rates: 1, 12, 24, 36 + global average pooling) for multi-scale context capture.
 - **Output**: Bilinear ×16 upsampling → binary mask.
 - **Custom `load_state_dict()`**: Gracefully handles auxiliary classifier weight mismatches during checkpoint loading.
 
@@ -112,12 +112,19 @@ $$\mathcal{L}_{\text{total}} = 0.5 \cdot \mathcal{L}_{\text{BCE}} + 0.5 \cdot \m
 
 ### E. Quantitative Results
 
+#### Validation Performance (Best Epochs)
 | Model & Stage | Best Epoch | Val IoU | Val Dice | Val Pixel Acc |
 |---|:---:|:---:|:---:|:---:|
-| U-Net — Stage 1 (Closeup pre-train) | **7** | **0.5118** | **0.6536** | 95.78% |
-| U-Net — Stage 2 (Dashcam fine-tune) | **73** | **0.1930** | **0.2881** | 99.52% |
-| DeepLabv3 — Stage 1 (Closeup pre-train) | **8** | **0.5801** | **0.7136** | 97.09% |
-| DeepLabv3 — Stage 2 (Dashcam fine-tune) | — | **~0.135** | **~0.214** | ~99.4% |
+| U-Net — Stage 1 (Closeup pre-train) | **7** | **0.5118** | **0.6536** | **95.78%** |
+| U-Net — Stage 2 (Dashcam fine-tune) | **73** | **0.1930** | **0.2881** | **99.52%** |
+| DeepLabv3 — Stage 1 (Closeup pre-train) | **8** | **0.5801** | **0.7136** | **97.09%** |
+| DeepLabv3 — Stage 2 (Dashcam fine-tune) | **48** | **0.1335** | **0.2124** | **99.36%** |
+
+#### Held-Out Test Set Performance (Stage 2 Dashcam)
+| Model | Test IoU | Test Dice | Test Precision | Test Recall | Test Pixel Acc | Parameters |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Two-Stage U-Net** | **0.2034** | **0.3009** | **0.3316** | **0.3644** | **99.51%** | **~7.8M** |
+| Two-Stage DeepLabv3 | 0.1393 | 0.2219 | 0.2233 | 0.3018 | 99.35% | ~42.0M |
 
 > **Note on Stage 2 IoU drop**: Human annotators draw coarse, thick masks around thin cracks in dashcam imagery. The model predicts fine, pixel-precise boundaries. IoU heavily penalizes this boundary misalignment, so the quantitative score drops even though qualitative detection is accurate.
 
@@ -142,14 +149,22 @@ Road_Damage_Project/
 ├── config.py                           ← All paths & hyperparameters (U-Net + DeepLabv3)
 ├── main.py                             ← CLI entry point (--setup, --infer, --jupyter)
 ├── requirements.txt
+├── README.md                           ← Main project documentation
+├── PROJECT_OVERVIEW.md                 ← In-depth technical specification
 ├── assets/
 │   └── demo.gif                        ← Demo GIF embedded in GitHub README
 ├── data/
-│   ├── best/                           ← Result videos and demo reels
+│   ├── README.md                       ← Dataset download instructions & layout
 │   └── crack/
 │       ├── closeup/                    ← Stage 1: CRACK500 + DeepCrack images & masks
 │       ├── dashcam/                    ← Stage 2: real-world dashcam frames & masks
 │       └── splits/                     ← CSV manifests (stage1_*.csv, dashcam_*.csv)
+├── others/
+│   ├── final_presentation.pptx         ← Final project presentation
+│   ├── final_report.pdf                ← Final IEEE-format research report
+│   ├── update_presentation.pptx        ← Midterm update presentation
+│   ├── update_report.pdf               ← Midterm progress report
+│   └── demo_video.mp4                  ← 1-minute system demo video
 ├── support/
 │   ├── crack/
 │   │   ├── preprocess.py               ← Pairs images/masks, generates split CSVs
@@ -159,7 +174,7 @@ Road_Damage_Project/
 │       ├── dataset.py                  ← SegmentationDataset (reads CSV manifests)
 │       ├── transforms.py               ← Albumentations train/val pipelines
 │       ├── unet.py                     ← U-Net model definition (~7.8M params)
-│       ├── deeplabv3.py                ← DeepLabv3 wrapper (~40M params, ResNet-50)
+│       ├── deeplabv3.py                ← DeepLabv3 wrapper (~42.0M params, ResNet-50)
 │       ├── losses.py                   ← BCEDiceLoss, FocalLoss
 │       ├── metrics.py                  ← IoU, Dice, Pixel Accuracy, Precision, Recall
 │       ├── trainer.py                  ← Trainer: early stopping, LR scheduling, CSV logs
