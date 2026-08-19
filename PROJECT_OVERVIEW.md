@@ -13,6 +13,10 @@ The system performs:
 - **Pavement Crack Detection**: Identifies exact road surface crack boundaries at pixel resolution.
 - **Real-World Video Inference**: Processes dashcam footage frame-by-frame and produces annotated output videos with crack overlays and bounding boxes.
 
+### Live Video Demos (YouTube)
+- **Demo 1 (Dashcam Road Survey)**: [https://www.youtube.com/watch?v=-uLCMcTAiGo](https://www.youtube.com/watch?v=-uLCMcTAiGo)
+- **Demo 2 (High-Resolution Crack Segmentation)**: [https://www.youtube.com/watch?v=SEnlQzeg_Fk](https://www.youtube.com/watch?v=SEnlQzeg_Fk)
+
 A **2-stage transfer learning** strategy is used: the model first pre-trains on high-contrast closeup crack images, then fine-tunes on real-world dashcam footage at a lower learning rate to bridge the domain gap.
 
 ---
