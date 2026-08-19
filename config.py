@@ -110,6 +110,66 @@ CRACK_UNET_STAGE2 = dict(
     resume_checkpoint = EXP_DIR / "crack_stage2_unet_finetuned" / "best_model.pth",
 )
 
+# ---------------------------------------------------------------------------
+# Training – DeepLabv3 crack detection (Single & 2-Stage Fine-Tuning)
+# ---------------------------------------------------------------------------
+CRACK_DEEPLABV3 = dict(
+    run_name        = "crack_deeplabv3_run1",
+    in_channels     = 3,
+    out_channels    = 1,
+    backbone        = "resnet50",
+    pretrained      = True,
+    epochs          = 50,
+    batch_size      = 64,
+    lr              = 1e-4,
+    lr_patience     = 4,
+    lr_factor       = 0.5,
+    early_stop_patience = 10,
+    bce_weight      = 0.5,
+    dice_weight     = 0.5,
+    device          = "cuda",
+)
+
+# Stage 1: Pre-training DeepLabv3 on Close-up crack dataset
+CRACK_DEEPLABV3_STAGE1 = dict(
+    run_name        = "crack_stage1_deeplabv3",
+    in_channels     = 3,
+    out_channels    = 1,
+    backbone        = "resnet50",
+    pretrained      = True,
+    epochs          = 40,
+    batch_size      = 64,
+    lr              = 2e-4,
+    lr_patience     = 4,
+    lr_factor       = 0.5,
+    early_stop_patience = 8,
+    bce_weight      = 0.5,
+    dice_weight     = 0.5,
+    device          = "cuda",
+)
+
+# Stage 2: Fine-tuning DeepLabv3 on Dashcam / Drone survey dataset
+CRACK_DEEPLABV3_STAGE2 = dict(
+    run_name        = "crack_stage2_deeplabv3_finetuned",
+    in_channels     = 3,
+    out_channels    = 1,
+    backbone        = "resnet50",
+    pretrained      = True,
+    epochs          = 50,
+    batch_size      = 64,
+    lr              = 1e-4,
+    lr_patience     = 4,
+    lr_factor       = 0.5,
+    early_stop_patience = 10,
+    bce_weight      = 0.5,
+    dice_weight     = 0.5,
+    device          = "cuda",
+    pretrained_path = EXP_DIR / "crack_stage1_deeplabv3" / "best_model.pth",
+    resume_checkpoint = EXP_DIR / "crack_stage2_deeplabv3_finetuned" / "best_model.pth",
+)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Augmentation

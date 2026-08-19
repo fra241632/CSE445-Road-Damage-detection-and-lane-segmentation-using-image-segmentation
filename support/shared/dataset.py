@@ -64,13 +64,13 @@ class SegmentationDataset(Dataset):
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
         if mask is None:
             raise FileNotFoundError(f"Could not read mask: {mask_path}")
-        mask = (mask > 127).astype(np.float32)   # binary float mask [0.0, 1.0]
+        mask = (mask > 127).astype(np.uint8)
 
         # Apply albumentations transform (handles image + mask jointly)
         if self.transform:
             augmented = self.transform(image=image, mask=mask)
             image = augmented["image"]   # already a tensor (ToTensorV2)
-            mask  = augmented["mask"]
+            mask  = augmented["mask"].float()
             # Ensure mask shape is [1, H, W]
             if mask.ndim == 2:
                 mask = mask.unsqueeze(0)

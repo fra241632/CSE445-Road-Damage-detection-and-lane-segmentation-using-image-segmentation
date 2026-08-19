@@ -64,6 +64,13 @@ class DeepLabV3Segmentation(nn.Module):
         """Return total trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
+    def load_state_dict(self, state_dict: dict, strict: bool = False, **kwargs):
+        """Loads state dict with graceful handling of auxiliary classifier weights."""
+        if not hasattr(self.model, "aux_classifier") or self.model.aux_classifier is None:
+            state_dict = {k: v for k, v in state_dict.items() if not k.startswith("model.aux_classifier")}
+        return super().load_state_dict(state_dict, strict=strict, **kwargs)
+
+
 
 if __name__ == "__main__":
     model = DeepLabV3Segmentation(backbone="resnet50", pretrained=False)

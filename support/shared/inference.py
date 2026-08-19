@@ -67,33 +67,52 @@ class CrackPredictor:
                 return p
             raise FileNotFoundError(f"Checkpoint not found at: {path}")
 
-        candidates = [
-            REPO_ROOT / "experiments" / "crack_stage2_unet_finetuned" / "best_model.pth",
-            REPO_ROOT / "experiments" / "crack_stage1_unet" / "best_model.pth",
-            REPO_ROOT / "experiments" / "crack_unet_run1" / "best_model.pth",
-            Path("experiments/crack_stage2_unet_finetuned/best_model.pth").resolve(),
-            Path("experiments/crack_stage1_unet/best_model.pth").resolve(),
-            Path("experiments/crack_unet_run1/best_model.pth").resolve(),
-            Path("../experiments/crack_stage2_unet_finetuned/best_model.pth").resolve(),
-            Path("../experiments/crack_unet_run1/best_model.pth").resolve(),
-            Path("/content/Road_Damage_Project/experiments/crack_stage2_unet_finetuned/best_model.pth"),
-            Path("/content/Road_Damage_Project/experiments/crack_unet_run1/best_model.pth"),
-        ]
+        if self.model_type == "deeplabv3":
+            candidates = [
+                REPO_ROOT / "experiments" / "crack_stage2_deeplabv3_finetuned" / "best_model.pth",
+                REPO_ROOT / "experiments" / "crack_stage1_deeplabv3" / "best_model.pth",
+                REPO_ROOT / "experiments" / "crack_deeplabv3_run1" / "best_model.pth",
+                Path("experiments/crack_stage2_deeplabv3_finetuned/best_model.pth").resolve(),
+                Path("experiments/crack_stage1_deeplabv3/best_model.pth").resolve(),
+                Path("experiments/crack_deeplabv3_run1/best_model.pth").resolve(),
+            ]
+        else:
+            candidates = [
+                REPO_ROOT / "experiments" / "crack_stage2_unet_finetuned" / "best_model.pth",
+                REPO_ROOT / "experiments" / "crack_stage1_unet" / "best_model.pth",
+                REPO_ROOT / "experiments" / "crack_unet_run1" / "best_model.pth",
+                Path("experiments/crack_stage2_unet_finetuned/best_model.pth").resolve(),
+                Path("experiments/crack_stage1_unet/best_model.pth").resolve(),
+                Path("experiments/crack_unet_run1/best_model.pth").resolve(),
+                Path("../experiments/crack_stage2_unet_finetuned/best_model.pth").resolve(),
+                Path("../experiments/crack_unet_run1/best_model.pth").resolve(),
+                Path("/content/Road_Damage_Project/experiments/crack_stage2_unet_finetuned/best_model.pth"),
+                Path("/content/Road_Damage_Project/experiments/crack_unet_run1/best_model.pth"),
+            ]
         for c in candidates:
             if c.exists():
                 return c.resolve()
 
         raise FileNotFoundError(
-            "Default model checkpoint not found. Please specify checkpoint_path or train a model first."
+            f"Default model checkpoint for {self.model_type} not found. Please specify checkpoint_path or train a model first."
         )
 
 
     def _load_model(self) -> torch.nn.Module:
-        model = UNet(
-            in_channels=config.CRACK_UNET.get("in_channels", 3),
-            out_channels=config.CRACK_UNET.get("out_channels", 1),
-            base_features=config.CRACK_UNET.get("base_features", 32),
-        )
+        if self.model_type == "deeplabv3":
+            from support.shared.deeplabv3 import DeepLabV3Segmentation
+            model = DeepLabV3Segmentation(
+                in_channels=config.CRACK_DEEPLABV3.get("in_channels", 3),
+                out_channels=config.CRACK_DEEPLABV3.get("out_channels", 1),
+                backbone=config.CRACK_DEEPLABV3.get("backbone", "resnet50"),
+                pretrained=False,
+            )
+        else:
+            model = UNet(
+                in_channels=config.CRACK_UNET.get("in_channels", 3),
+                out_channels=config.CRACK_UNET.get("out_channels", 1),
+                base_features=config.CRACK_UNET.get("base_features", 32),
+            )
 
         checkpoint = torch.load(self.checkpoint_path, map_location=self.device)
         if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
@@ -111,13 +130,13 @@ class CrackPredictor:
         self,
         frame_rgb: np.ndarray,
         threshold: float = 0.20,
-        crack_color: Tuple[int, int, int] = (255, 255, 255),
+        crack_color: Tuple[int, int, int] = (255, 0, 0),
         alpha: float = 1.0,
         overlay_mode: str = "both",  # 'both' (mask + bboxes), 'bbox' (bboxes only), 'mask' (mask only)
         draw_boxes: bool = True,     # Enable bounding boxes around detected cracks
         min_box_area: int = 20,      # Minimum contour area in pixels to draw a bounding box
-        box_thickness: int = -1,     # -1 / cv2.FILLED for full filled solid box; > 0 for outline
-        box_color: Optional[Tuple[int, int, int]] = (255, 0, 0),
+        box_thickness: int = 2,      # -1 / cv2.FILLED for full filled solid box; > 0 for outline
+        box_color: Optional[Tuple[int, int, int]] = (255, 255, 0),
         draw_box_labels: bool = False,
         morph_close: bool = True,    # Bridge fragmented big crack contours
     ) -> Dict[str, Any]:
@@ -261,13 +280,13 @@ class CrackPredictor:
         image_path: Union[str, Path],
         output_path: Optional[Union[str, Path]] = None,
         threshold: float = 0.20,
-        crack_color: Tuple[int, int, int] = (255, 255, 255),
+        crack_color: Tuple[int, int, int] = (255, 0, 0),
         alpha: float = 1.0,
         overlay_mode: str = "both",
         draw_boxes: bool = True,
         min_box_area: int = 20,
-        box_thickness: int = -1,
-        box_color: Optional[Tuple[int, int, int]] = (255, 0, 0),
+        box_thickness: int = 2,
+        box_color: Optional[Tuple[int, int, int]] = (255, 255, 0),
         draw_box_labels: bool = False,
         morph_close: bool = True,
         save_plot: bool = False,
@@ -325,13 +344,13 @@ class CrackPredictor:
         video_path: Union[str, Path],
         output_path: Optional[Union[str, Path]] = None,
         threshold: float = 0.20,
-        crack_color: Tuple[int, int, int] = (255, 255, 255),
+        crack_color: Tuple[int, int, int] = (255, 0, 0),
         alpha: float = 1.0,
         overlay_mode: str = "both",
         draw_boxes: bool = True,
         min_box_area: int = 20,
-        box_thickness: int = -1,
-        box_color: Optional[Tuple[int, int, int]] = (255, 0, 0),
+        box_thickness: int = 2,
+        box_color: Optional[Tuple[int, int, int]] = (255, 255, 0),
         draw_box_labels: bool = False,
         morph_close: bool = True,
         show_hud: bool = False,

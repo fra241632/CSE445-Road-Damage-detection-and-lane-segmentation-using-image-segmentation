@@ -353,11 +353,10 @@ class Trainer:
             state = torch.load(self.best_model_path, map_location=self.device)
             if isinstance(state, dict) and "model_state_dict" in state:
                 state = state["model_state_dict"]
-            elif isinstance(state, dict) and "state_dict" in state:
-                state = state["state_dict"]
             self.model.load_state_dict(state)
             print(f"[Trainer] Loaded best checkpoint from {self.best_model_path}")
         else:
             print(f"[!] No checkpoint found at {self.best_model_path}")
+
 
 
