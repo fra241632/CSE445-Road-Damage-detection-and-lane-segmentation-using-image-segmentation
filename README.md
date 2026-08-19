@@ -15,13 +15,24 @@ Supervised semantic segmentation project focused on pavement crack detection:
 
 | Task | Dataset | Primary Model | Comparison Model | Output |
 |---|---|---|---|---|
-| Crack Detection | CRACK500 + DeepCrack (closeup) + Dashcam footage | U-Net (2-Stage) | DeepLabv3 (ResNet50) | Binary crack mask |
+| Crack Detection | CRACK500 + DeepCrack (closeup) + Dashcam footage | U-Net (2-Stage) | DeepLabv3 (ResNet50, 2-Stage) | Binary crack mask |
 
 Framed as pixel-wise binary segmentation, trained with a combined BCE + Dice loss to handle extreme class imbalance (crack pixels are only 2–5% of total image area).
 
-A **2-stage transfer learning** approach is used:
-- **Stage 1**: Pre-train U-Net on high-contrast closeup crack images (CRACK500, DeepCrack)
-- **Stage 2**: Fine-tune on real-world dashcam/drone survey footage at a lower learning rate
+A **2-stage transfer learning** approach is used for both models:
+- **Stage 1**: Pre-train on high-contrast closeup crack images (CRACK500 + DeepCrack)
+- **Stage 2**: Fine-tune on real-world dashcam footage at a lower learning rate
+
+## Results
+
+| Model & Stage | Best Epoch | Val IoU | Val Dice | Val Pixel Acc |
+|---|:---:|:---:|:---:|:---:|
+| U-Net — Stage 1 (Closeup pre-train) | 7 | 0.5118 | 0.6536 | 95.78% |
+| U-Net — Stage 2 (Dashcam fine-tune) | 73 | 0.1930 | 0.2881 | 99.52% |
+| DeepLabv3 — Stage 1 (Closeup pre-train) | 8 | 0.5801 | 0.7136 | 97.09% |
+| DeepLabv3 — Stage 2 (Dashcam fine-tune) | — | ~0.135 | ~0.214 | ~99.4% |
+
+> **Note on Stage 2 IoU**: Human annotators draw thick, coarse masks around thin cracks in dashcam footage. The model predicts pixel-precise boundaries. IoU penalizes this mismatch heavily — the segmentation is qualitatively accurate even where the number appears low.
 
 ---
 
@@ -61,11 +72,15 @@ Road_Damage_Project/
 │   ├── 01_EDA_crack.ipynb           ← EDA and augmentation preview
 │   ├── 02_train_crack_unet.ipynb    ← Train U-Net (2-stage) + learning curves
 │   ├── 03_evaluate_crack.ipynb      ← Test set evaluation + failure analysis
-│   ├── 04_compare_crack_deeplabv3.ipynb ← Head-to-head: U-Net vs DeepLabv3
+│   ├── 04_compare_crack_deeplabv3.ipynb ← Head-to-head: U-Net vs DeepLabv3 (2-stage)
 │   └── 05_inference_crack.ipynb     ← Interactive image/video inference demo
+├── assets/
+│   └── demo.gif                     ← Demo GIF shown on GitHub repository page
 └── experiments/
-    ├── crack_stage1_unet/           ← Stage 1 checkpoint (best_model.pth, train_log.csv)
-    └── crack_stage2_unet_finetuned/ ← Stage 2 checkpoint (best_model.pth, train_log.csv)
+    ├── crack_stage1_unet/                  ← U-Net Stage 1 (best_model.pth, train_log.csv)
+    ├── crack_stage2_unet_finetuned/        ← U-Net Stage 2 (best_model.pth, train_log.csv)
+    ├── crack_stage1_deeplabv3/             ← DeepLabv3 Stage 1 checkpoint & log
+    └── crack_stage2_deeplabv3_finetuned/   ← DeepLabv3 Stage 2 checkpoint & log
 ```
 
 ---
@@ -148,12 +163,17 @@ python main.py --infer path/to/dashcam_video.mp4 --output result.mp4
 
 ## Architecture
 
-**U-Net** (Ronneberger et al., 2015)
-- Encoder: 4 × DoubleConv + MaxPool
-- Bottleneck: DoubleConv
+**U-Net** (Ronneberger et al., 2015) — Primary Model
+- Encoder: 4 × DoubleConv + MaxPool, channels `32 → 64 → 128 → 256`
+- Bottleneck: DoubleConv at 16×16 (512 channels)
 - Decoder: 4 × Bilinear Upsample + skip-concat + DoubleConv
 - Output: 1×1 Conv → Sigmoid → probability map [0, 1]
-- ~7.8 M parameters with `base_features=32`, input 256×256
+- ~7.8 M parameters, input 256×256
+
+**DeepLabv3** (ResNet-50 backbone) — Comparison Model
+- Backbone: ResNet-50 pretrained on ImageNet (~40M parameters)
+- ASPP: 5 parallel atrous branches (rates: 1, 6, 12, 18 + global average pooling)
+- Output: Bilinear ×16 upsampling → binary mask
 
 **Loss**: BCE + Dice (0.5 / 0.5 weighted)  
 **Optimiser**: Adam + ReduceLROnPlateau  
@@ -167,6 +187,7 @@ python main.py --infer path/to/dashcam_video.mp4 --output result.mp4
 |---|---|
 | Supervised learning | Labeled image–mask pairs |
 | Transfer learning (2-stage) | `support/crack/train_2stage.py` |
+| Multi-model comparison | `notebooks/04_compare_crack_deeplabv3.ipynb` |
 | Dataset splitting (70/15/15) | `support/crack/preprocess.py` |
 | Preprocessing & normalisation | `support/shared/transforms.py` |
 | Data augmentation | `support/shared/transforms.py` |
@@ -175,7 +196,7 @@ python main.py --infer path/to/dashcam_video.mp4 --output result.mp4
 | Overfitting analysis | Train vs val curves in notebook 02 |
 | Hyperparameter tuning | `config.py` + experiment runs |
 | Quantitative evaluation | IoU, Dice, Pixel Acc in notebooks 03 & 04 |
-| Real-world inference | Image + video pipeline in `inference.py` |
+| Real-world video inference | Image + video pipeline in `support/shared/inference.py` |
 
 ---
 
